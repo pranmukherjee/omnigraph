@@ -13,46 +13,46 @@ def graphconfig(filename,data):
     data[graphname]={}
     for graphline in config['BASE']['Datasets'].split():
       data[graphname][graphline]={}
-      data[graphname][graphline]["xydata"]=[]
-      data[graphname][graphline]["legend"]=config.get(graphline,'legend',fallback=None)
-      data[graphname][graphline]["marker"]=config[graphline]['marker'].strip()
-      data[graphname][graphline]["color"]=config[graphline]['color'].strip()
-      data[graphname][graphline]["style"]=config[graphline]['linestyle'].strip()
-      data[graphname][graphline]["filename"]="{}{}{}".format(config[graphline]['prefix'].strip(),graphname,config[graphline]['suffix'].strip())
+      data[graphname][graphline]['XYdata']=[]
+      data[graphname][graphline]['Legend']=config.get(graphline,'Legend',fallback=None)
+      data[graphname][graphline]['Marker']=config[graphline]['Marker'].strip()
+      data[graphname][graphline]['Color']=config[graphline]['Color'].strip()
+      data[graphname][graphline]['Style']=config[graphline]['Linestyle'].strip()
+      data[graphname][graphline]['Filename']='{}{}{}'.format(config[graphline]['Prefix'].strip(),graphname,config[graphline]['Suffix'].strip())
   return config
 
 def dataload(data,graphname,graphline):
-    file = open(data[graphname][graphline]["filename"],"r")
+    file = open(data[graphname][graphline]['Filename'],'r')
     for line in file:
       clean = line.strip().split()
-      (x,y) = (int(clean[0]), float(clean[1]))
-      data[graphname][graphline]["xydata"].append((x,y))
+      (x,y) = (float(clean[0]), float(clean[1]))
+      data[graphname][graphline]['XYdata'].append((x,y))
     file.close()
 
 def datatruncate(data,graphname,graphline):
-  mydata = data[graphname][graphline]["xydata"]
+  mydata = data[graphname][graphline]['XYdata']
   truncated = [(elem1, np.trunc(elem2)) for elem1, elem2 in mydata]
-  data[graphname][graphline]["xydata"]=truncated
+  data[graphname][graphline]['XYdata']=truncated
 
 def datasort(data,graphname,graphline):
-  mydata = data[graphname][graphline]["xydata"]
+  mydata = data[graphname][graphline]['XYdata']
   mydata.sort(key=lambda tup: tup[0])
-  data[graphname][graphline]["xydata"]=mydata
+  data[graphname][graphline]['XYdata']=mydata
 
 def datamultiply(data,graphname,graphline,multiplier):
-  mydata = data[graphname][graphline]["xydata"]
+  mydata = data[graphname][graphline]['XYdata']
   for n, tup in enumerate(mydata):
-    data[graphname][graphline]["xydata"][n]=(tup[0], tup[1]*multiplier)
+    data[graphname][graphline]['XYdata'][n]=(tup[0], tup[1]*multiplier)
 
 def dataadd(data,graphname,graphline,addend):
-  mydata = data[graphname][graphline]["xydata"]
+  mydata = data[graphname][graphline]['XYdata']
   for n, tup in enumerate(mydata):
-    data[graphname][graphline]["xydata"][n]=(tup[0], tup[1]+addend)
+    data[graphname][graphline]['XYdata'][n]=(tup[0], tup[1]+addend)
 
 def makegraph(data,config,page,hf,ha,numv,numh,i,j):
-  plot       = page+"."+str(i)+"."+str(j)
+  plot       = page+'.'+str(i)+'.'+str(j)
   directory  = config.get('BASE','Outputdir',fallback='./')
-  filename   = config.get(page,'filename',fallback=None)
+  filename   = config.get(page,'Filename',fallback=None)
   graphname   = config.get(plot,'Graphname',fallback=None)
   label      = config.get(plot,'Ylabel',fallback=None)
   annotation = config.get(plot,'Annotation',fallback=None)
@@ -68,13 +68,13 @@ def makegraph(data,config,page,hf,ha,numv,numh,i,j):
   else:
     ha[i,j].axis('off')
   if filename is not None:
-    location = directory+"/"+filename
+    location = directory+'/'+filename
     plt.savefig(location)
 
 def makegraphs(data,config):
   pagenames = config['BASE']['Pagenames'].split()
   for page in pagenames:
-    title         = config.get(page,'title',fallback=None)
+    title         = config.get(page,'Title',fallback=None)
     numvertical   = config.getint(page,'Numvertical',fallback=1)
     numhorizontal = config.getint(page,'Numhorizontal',fallback=1)
     hf,ha = plt.subplots(numvertical,numhorizontal)
@@ -99,11 +99,11 @@ def setscale(ax,style):
 
 def makeplot(hf,ha,numx,numy,x,y,indata,name,annotate,plotstyle):
   for dataline in indata:
-    mydata   = indata[dataline]["xydata"]
-    mylegend = indata[dataline]["legend"]
-    mymarker = indata[dataline]["marker"]
-    mycolor  = indata[dataline]["color"]
-    mystyle  = indata[dataline]["style"]
+    mydata   = indata[dataline]['XYdata']
+    mylegend = indata[dataline]['Legend']
+    mymarker = indata[dataline]['Marker']
+    mycolor  = indata[dataline]['Color']
+    mystyle  = indata[dataline]['Style']
     # plot data
     if numx==1 and numy==1:
       ax=ha
@@ -117,9 +117,9 @@ def makeplot(hf,ha,numx,numy,x,y,indata,name,annotate,plotstyle):
     setscale(ax,plotstyle)
 
   if annotate is not None:
-    for i in indata[annotate]["xydata"]:
+    for i in indata[annotate]['XYdata']:
       ax.annotate(i[0], (i[0]*1.1, i[1]*1.1))
-  ax.set(xlabel="Number of threads")
+  ax.set(xlabel='Number of threads')
   if name is not None:
     ax.set(ylabel=name)
   ax.legend(loc='best', fontsize='xx-small')
@@ -145,12 +145,12 @@ def main():
   # Read in xy data from files
   for graphname in data:
     for graphline in data[graphname]:
-      if data[graphname][graphline]["legend"] is not None:
+      if data[graphname][graphline]['Legend'] is not None:
         dataload(data,graphname,graphline)
 
   # Prepare data
-  for graphline in data["runtime"]:
-    datamultiply(data,"runtime",graphline,1/60000)
+  for graphline in data['runtime']:
+    datamultiply(data,'runtime',graphline,1/60000)
   for graphname in data:
     for graphline in data[graphname]:
       datatruncate(data,graphname,graphline)
