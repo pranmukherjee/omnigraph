@@ -25,7 +25,7 @@ def dataload(data,graphname,graphline):
     file = open(data[graphname][graphline]['Filename'],'r')
     for line in file:
       clean = line.strip().split()
-      (x,y) = (float(clean[0]), float(clean[1]))
+      (x,y) = (float(clean[0].strip(',')), float(clean[1].strip(',')))
       data[graphname][graphline]['XYdata'].append((x,y))
     file.close()
 
