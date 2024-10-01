@@ -2,6 +2,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import csv,configparser
+import argparse
 
 def graphconfig(filename,data):
   config = configparser.ConfigParser()
@@ -10,14 +11,14 @@ def graphconfig(filename,data):
   # Initialize data structure
   for graphname in config['BASE']['Graphnames'].split():
     data[graphname]={}
-    for graphline in config['BASE']['Graphlines'].split():
+    for graphline in config['BASE']['Datasets'].split():
       data[graphname][graphline]={}
       data[graphname][graphline]["xydata"]=[]
       data[graphname][graphline]["legend"]=config.get(graphline,'legend',fallback=None)
       data[graphname][graphline]["marker"]=config[graphline]['marker'].strip()
       data[graphname][graphline]["color"]=config[graphline]['color'].strip()
       data[graphname][graphline]["style"]=config[graphline]['linestyle'].strip()
-      data[graphname][graphline]["filename"]="{}{}{}".format(config[graphline]['prefix'].strip(),graphname,config[graphline]['postfix'].strip())
+      data[graphname][graphline]["filename"]="{}{}{}".format(config[graphline]['prefix'].strip(),graphname,config[graphline]['suffix'].strip())
   return config
 
 def dataload(data,graphname,graphline):
@@ -52,14 +53,14 @@ def makegraph(data,config,page,hf,ha,numv,numh,i,j):
   plot       = page+"."+str(i)+"."+str(j)
   directory  = config.get('BASE','Outputdir',fallback='./')
   filename   = config.get(page,'filename',fallback=None)
-  dataline   = config.get(plot,'Dataline',fallback=None)
+  graphname   = config.get(plot,'Graphname',fallback=None)
   label      = config.get(plot,'Ylabel',fallback=None)
   annotation = config.get(plot,'Annotation',fallback=None)
   graphstyle = config.get(plot,'Style',fallback='linear')
 
   # Plot data
-  if dataline is not None:
-    makeplot(hf,ha,numv,numh,i,j,data[dataline],label,annotation,graphstyle)
+  if graphname is not None:
+    makeplot(hf,ha,numv,numh,i,j,data[graphname],label,annotation,graphstyle)
   elif numv==1:
     ha[j].axis('off')
   elif numh==1:
@@ -71,8 +72,8 @@ def makegraph(data,config,page,hf,ha,numv,numh,i,j):
     plt.savefig(location)
 
 def makegraphs(data,config):
-  graphpages = config['BASE']['Graphpages'].split()
-  for page in graphpages:
+  pagenames = config['BASE']['Pagenames'].split()
+  for page in pagenames:
     title         = config.get(page,'title',fallback=None)
     numvertical   = config.getint(page,'Numvertical',fallback=1)
     numhorizontal = config.getint(page,'Numhorizontal',fallback=1)
@@ -132,10 +133,14 @@ def main():
   #  but the rest should work just fine with other x,y data
   ##
 
+  parser = argparse.ArgumentParser(description='Multi-page, multi-graph subplot graphing tool.')
+  parser.add_argument('-c', '--conf', help='Config file to use', type=str, dest='config_file', default='graphsetup.cfg')
+  args = parser.parse_args()
+
   data = {}
 
   # Input configuration
-  config = graphconfig("graphsetup.cfg",data)
+  config = graphconfig(args.config_file,data)
 
   # Read in xy data from files
   for graphname in data:
