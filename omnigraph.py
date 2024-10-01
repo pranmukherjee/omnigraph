@@ -118,7 +118,7 @@ def makeplot(hf,ha,numx,numy,x,y,indata,name,annotate,plotstyle):
 
   if annotate is not None:
     for i in indata[annotate]['XYdata']:
-      ax.annotate(i[0], (i[0]*1.1, i[1]*1.1))
+      ax.annotate(int(i[0]), (i[0]*1.1, i[1]*1.1))
   ax.set(xlabel='Number of threads')
   if name is not None:
     ax.set(ylabel=name)
