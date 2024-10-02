@@ -69,7 +69,7 @@ def setscale(ax,style):
     ax.set_xscale('linear')
     ax.set_yscale('linear')
 
-def makeplot(hf,ha,numx,numy,x,y,indata,name,annotate,plotstyle):
+def makeplot(ax,indata,name,annotate,plotstyle):
   """Create a single graph on a page."""
   for dataline in indata:
     mydata   = indata[dataline]['XYdata']
@@ -78,14 +78,6 @@ def makeplot(hf,ha,numx,numy,x,y,indata,name,annotate,plotstyle):
     mycolor  = indata[dataline]['Color']
     mystyle  = indata[dataline]['Style']
     # plot data
-    if numx==1 and numy==1:
-      ax=ha
-    elif numx>1 and numy>1:
-      ax=ha[x,y]
-    elif numx==1:
-      ax=ha[y]
-    else:
-      ax=ha[x]
     ax.plot(*zip(*mydata), marker=mymarker, color=mycolor, linestyle=mystyle, label=mylegend)
     setscale(ax,plotstyle)
 
@@ -97,17 +89,29 @@ def makeplot(hf,ha,numx,numy,x,y,indata,name,annotate,plotstyle):
     ax.set(ylabel=name)
   ax.legend(loc='best', fontsize='xx-small')
 
-def makegraph(data,config,page,hf,ha,numv,numh,i,j):
+def makegraph(data,config,page,ha,i,j):
   """Wrapper function for makeplot."""
   plot       = page+'.'+str(i)+'.'+str(j)
+  numv       = config.getint(page,'Numvertical',fallback=1)
+  numh       = config.getint(page,'Numhorizontal',fallback=1)
   graphname  = config.get(plot,'Graphname',fallback=None)
   label      = config.get(plot,'Ylabel',fallback=None)
   annotation = config.get(plot,'Annotation',fallback=None)
   graphstyle = config.get(plot,'Style',fallback='linear')
 
+  # Determine axes
+  if numv==1 and numh==1:
+    ax=ha
+  elif numv>1 and numh>1:
+    ax=ha[i,j]
+  elif numv==1:
+    ax=ha[j]
+  else:
+    ax=ha[i]
+
   # Plot data
   if graphname is not None:
-    makeplot(hf,ha,numv,numh,i,j,data[graphname],label,annotation,graphstyle)
+    makeplot(ax,data[graphname],label,annotation,graphstyle)
   elif numv==1:
     ha[j].axis('off')
   elif numh==1:
@@ -129,7 +133,7 @@ def makegraphs(data,config):
       hf.suptitle(title)
     for i in range(numvertical):
       for j in range(numhorizontal):
-        makegraph(data,config,page,hf,ha,numvertical,numhorizontal,i,j)
+        makegraph(data,config,page,ha,i,j)
     if filename is not None:
       location = directory+'/'+filename
       plt.savefig(location)
