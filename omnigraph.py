@@ -14,8 +14,8 @@ def graphconfig(filename,data):
   for graphname in config['BASE']['Graphnames'].split():
     data[graphname]={}
     for dataset in config['BASE']['Datasets'].split():
-      data[graphname][dataset]={}
-      data[graphname][dataset]['XYdata']=[]
+      data[graphname][dataset]           = {}
+      data[graphname][dataset]['XYdata'] = []
       data[graphname][dataset]['Legend'] = config.get(dataset,'Legend',fallback=None)
       data[graphname][dataset]['Marker'] = config[dataset]['Marker'].strip()
       data[graphname][dataset]['Color']  = config[dataset]['Color'].strip()
@@ -73,8 +73,8 @@ def setscale(ax,style):
 
 def getaxes(config,page,ha,i,j):
   """Figure out axes based on config; this is a workaround for matplotlib."""
-  numv       = config.getint(page,'Numvertical',fallback=1)
-  numh       = config.getint(page,'Numhorizontal',fallback=1)
+  numv = config.getint(page,'Numvertical',fallback=1)
+  numh = config.getint(page,'Numhorizontal',fallback=1)
   if numv==1 and numh==1:
     ax=ha
   elif numv>1 and numh>1:
@@ -88,8 +88,8 @@ def getaxes(config,page,ha,i,j):
 def makeplot(ax,graphdata,config,plot):
   """Create a single graph on a page."""
   mylabel      = config.get(plot,'Ylabel',fallback=None)
-  annotation = config.get(plot,'Annotation',fallback=None)
-  graphstyle = config.get(plot,'Style',fallback='linear')
+  annotation   = config.get(plot,'Annotation',fallback=None)
+  graphstyle   = config.get(plot,'Style',fallback='linear')
 
   # Plot the data, one line per Dataset
   for dataset, elements in graphdata.items():
@@ -176,8 +176,6 @@ def main():
   config = graphconfig(args.config_file,data)
 
   # Read in xy data from files
-  # for graphname in data:
-  #   for graphline in data[graphname]:
   for graphname, datasets in data.items():
     for dataset, elements in datasets.items():
       if elements['Legend'] is not None:
