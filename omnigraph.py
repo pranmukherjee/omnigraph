@@ -13,48 +13,50 @@ def graphconfig(filename,data):
   # Initialize data structure
   for graphname in config['BASE']['Graphnames'].split():
     data[graphname]={}
-    for graphline in config['BASE']['Datasets'].split():
-      data[graphname][graphline]={}
-      data[graphname][graphline]['XYdata']=[]
-      data[graphname][graphline]['Legend'] = config.get(graphline,'Legend',fallback=None)
-      data[graphname][graphline]['Marker'] = config[graphline]['Marker'].strip()
-      data[graphname][graphline]['Color']  = config[graphline]['Color'].strip()
-      data[graphname][graphline]['Style']  = config[graphline]['Linestyle'].strip()
-      data[graphname][graphline]['Filename']=f"{config[graphline]['Prefix'].strip()}{graphname}{config[graphline]['Suffix'].strip()}"
+    for dataset in config['BASE']['Datasets'].split():
+      data[graphname][dataset]={}
+      data[graphname][dataset]['XYdata']=[]
+      data[graphname][dataset]['Legend'] = config.get(dataset,'Legend',fallback=None)
+      data[graphname][dataset]['Marker'] = config[dataset]['Marker'].strip()
+      data[graphname][dataset]['Color']  = config[dataset]['Color'].strip()
+      data[graphname][dataset]['Style']  = config[dataset]['Linestyle'].strip()
+      prefix=config[dataset]['Prefix'].strip()
+      suffix=config[dataset]['Suffix'].strip()
+      data[graphname][dataset]['Filename']=f"{prefix}{graphname}{suffix}"
   return config
 
-def dataload(data,graphname,graphline):
+def dataload(data,graphname,dataset):
   """Load one line of xy data from a file."""
-  file = open(data[graphname][graphline]['Filename'],'r', encoding="utf-8")
+  file = open(data[graphname][dataset]['Filename'],'r', encoding="utf-8")
   for line in file:
     clean = line.strip().split()
     (x,y) = (float(clean[0].strip(',')), float(clean[1].strip(',')))
-    data[graphname][graphline]['XYdata'].append((x,y))
+    data[graphname][dataset]['XYdata'].append((x,y))
   file.close()
 
-def datatruncate(data,graphname,graphline):
+def datatruncate(data,graphname,dataset):
   """Truncate float data for easier y-axis readability."""
-  mydata = data[graphname][graphline]['XYdata']
+  mydata = data[graphname][dataset]['XYdata']
   truncated = [(elem1, np.trunc(elem2)) for elem1, elem2 in mydata]
-  data[graphname][graphline]['XYdata']=truncated
+  data[graphname][dataset]['XYdata']=truncated
 
-def datasort(data,graphname,graphline):
+def datasort(data,graphname,dataset):
   """Sort data by x-axis element to avoid spaghetti graph."""
-  mydata = data[graphname][graphline]['XYdata']
+  mydata = data[graphname][dataset]['XYdata']
   mydata.sort(key=lambda tup: tup[0])
-  data[graphname][graphline]['XYdata']=mydata
+  data[graphname][dataset]['XYdata']=mydata
 
-def datamultiply(data,graphname,graphline,multiplier):
+def datamultiply(data,graphname,dataset,multiplier):
   """Scale y data by a given multiplier."""
-  mydata = data[graphname][graphline]['XYdata']
+  mydata = data[graphname][dataset]['XYdata']
   for n, tup in enumerate(mydata):
-    data[graphname][graphline]['XYdata'][n]=(tup[0], tup[1]*multiplier)
+    data[graphname][dataset]['XYdata'][n]=(tup[0], tup[1]*multiplier)
 
-def dataadd(data,graphname,graphline,addend):
+def dataadd(data,graphname,dataset,addend):
   """Bias y data by a given additive factor."""
-  mydata = data[graphname][graphline]['XYdata']
+  mydata = data[graphname][dataset]['XYdata']
   for n, tup in enumerate(mydata):
-    data[graphname][graphline]['XYdata'][n]=(tup[0], tup[1]+addend)
+    data[graphname][dataset]['XYdata'][n]=(tup[0], tup[1]+addend)
 
 def setscale(ax,style):
   """Set the axis scales for a given graph (e.g. semilogx)."""
@@ -111,12 +113,9 @@ def makeplot(ax,graphdata,config,plot):
     for i in graphdata[annotation]['XYdata']:
       ax.annotate(int(i[0]), (i[0]*1.1, i[1]*1.1))
 
-def makegraph(data,config,page,ha,i,j):
+def makegraph(data,config,plot,ax):
   """Wrapper for makeplot."""
-  plot       = page+'.'+str(i)+'.'+str(j)
   graphname  = config.get(plot,'Graphname',fallback=None)
-
-  ax = getaxes(config,page,ha,i,j)
 
   # Plot data
   if graphname is not None:
@@ -130,7 +129,9 @@ def makegraphs(data,config,ha,page):
   numhorizontal = config.getint(page,'Numhorizontal',fallback=1)
   for i in range(numvertical):
     for j in range(numhorizontal):
-      makegraph(data,config,page,ha,i,j)
+      plot = page+'.'+str(i)+'.'+str(j)
+      ax   = getaxes(config,page,ha,i,j)
+      makegraph(data,config,plot,ax)
 
 def makepages(data,config):
   """Create pages."""
@@ -164,7 +165,7 @@ def main():
   ##
 
   parser = argparse.ArgumentParser(description='Multi-page, multi-graph subplot graphing tool.')
-  parser.add_argument('-c', '--conf', help='Config file to use', type=str, 
+  parser.add_argument('-c', '--conf', help='Config file to use', type=str,
                       dest='config_file', default='graphsetup.cfg')
   args = parser.parse_args()
 
@@ -176,18 +177,18 @@ def main():
   # Read in xy data from files
   # for graphname in data:
   #   for graphline in data[graphname]:
-  for graphname, graphlines in data.items():
-    for graphline, elements in graphlines.items():
+  for graphname, datasets in data.items():
+    for dataset, elements in datasets.items():
       if elements['Legend'] is not None:
-        dataload(data,graphname,graphline)
+        dataload(data,graphname,dataset)
 
   # Prepare data
   for graphline in data['runtime']:
     datamultiply(data,'runtime',graphline,1/60000)
-  for graphname, graphlines in data.items():
-    for graphline, elements in graphlines.items():
-      datatruncate(data,graphname,graphline)
-      datasort(data,graphname,graphline)
+  for graphname, datasets in data.items():
+    for dataset, elements in datasets.items():
+      datatruncate(data,graphname,dataset)
+      datasort(data,graphname,dataset)
 
   makepages(data,config)
 
