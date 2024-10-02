@@ -2,6 +2,7 @@
 
 import argparse
 import configparser
+import csv
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -27,18 +28,18 @@ def graphconfig(filename,data):
 
 def dataload(data,graphname,dataset):
   """Load one line of xy data from a file."""
-  file = open(data[graphname][dataset]['Filename'],'r', encoding="utf-8")
-  for line in file:
-    clean = line.strip().split()
-    (x,y) = (float(clean[0].strip(',')), float(clean[1].strip(',')))
-    data[graphname][dataset]['XYdata'].append((x,y))
-  file.close()
+  with open(data[graphname][dataset]['Filename'], 'r', encoding='utf-8') as file:
+    for line in file:
+      clean = line.strip().split()
+      (x,y) = (float(clean[0].strip(',')), float(clean[1].strip(',')))
+      data[graphname][dataset]['XYdata'].append((x,y))
+    file.close()
 
-def datatruncate(data,graphname,dataset):
+def dataround(data,graphname,dataset,numplaces):
   """Truncate float data for easier y-axis readability."""
   mydata = data[graphname][dataset]['XYdata']
-  truncated = [(elem1, np.trunc(elem2)) for elem1, elem2 in mydata]
-  data[graphname][dataset]['XYdata']=truncated
+  rounded = [(elem1, np.round(elem2,numplaces)) for elem1, elem2 in mydata]
+  data[graphname][dataset]['XYdata']=rounded
 
 def datasort(data,graphname,dataset):
   """Sort data by x-axis element to avoid spaghetti graph."""
@@ -110,7 +111,8 @@ def makeplot(ax,graphdata,config,plot):
     ax.set(ylabel=mylabel)
   ax.legend(loc='best', fontsize='xx-small')
 
-  if annotation is not None:
+  # Annotate the selected dataset's line
+  if annotation is not None and annotation in graphdata:
     for i in graphdata[annotation]['XYdata']:
       ax.annotate(int(i[0]), (i[0]*1.1, i[1]*1.1))
 
@@ -153,6 +155,17 @@ def makepages(data,config):
       plt.savefig(location)
       plt.clf()
 
+def writecsv(data,filename):
+  """Write out XY data to CSV format for each graph and dataset"""
+  with open(filename, 'w', encoding='utf-8') as file:
+    writer = csv.writer(file, delimiter=',', dialect='excel', quoting=csv.QUOTE_MINIMAL)
+    for graphname, datasets in data.items():
+      for dataset, elements in datasets.items():
+        if elements['Legend'] is not None:
+          writer.writerow([dataset,graphname])
+          writer.writerows(elements['XYdata'])
+    file.close()
+
 
 def main():
   """Main function; wraps up everything else."""
@@ -182,13 +195,17 @@ def main():
         dataload(data,graphname,dataset)
 
   # Prepare data
-  for graphline in data['runtime']:
-    datamultiply(data,'runtime',graphline,1/60000)
+  if 'runtime' in data:
+    for dataset in data['runtime']:
+      datamultiply(data,'runtime',dataset,1/60000)
   for graphname, datasets in data.items():
     for dataset, elements in datasets.items():
-      datatruncate(data,graphname,dataset)
-      datasort(data,graphname,dataset)
+      if elements['Legend'] is not None:
+        dataround(data,graphname,dataset,3)
+        datasort(data,graphname,dataset)
 
   makepages(data,config)
+  filename='output/collated.csv'
+  writecsv(data,filename)
 
 main()
