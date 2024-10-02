@@ -2,5 +2,7 @@
 output
 proc/1M/
 proc/10M/
+proc/old/
+proc/backup
 results
 ubuntu.code-workspace
