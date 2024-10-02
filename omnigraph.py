@@ -112,6 +112,7 @@ def makeplot(ax,graphdata,config,plot):
   ax.legend(loc='best', fontsize='xx-small')
 
   # Annotate the selected dataset's line
+  # TODO: Make this cleaner and more applicable to other data sets
   if annotation is not None and annotation in graphdata:
     for i in graphdata[annotation]['XYdata']:
       ax.annotate(int(i[0]), (i[0]*1.1, i[1]*1.1))
