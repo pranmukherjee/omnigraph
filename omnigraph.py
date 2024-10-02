@@ -99,7 +99,8 @@ def makeplot(ax,graphdata,config,plot):
     mycolor  = elements['Color']
     mystyle  = elements['Style']
     # plot data
-    ax.plot(*zip(*mydata), marker=mymarker, color=mycolor, linestyle=mystyle, label=mylegend)
+    if mylegend is not None:
+      ax.plot(*zip(*mydata), marker=mymarker, color=mycolor, linestyle=mystyle, label=mylegend)
 
   setscale(ax,graphstyle)
 
