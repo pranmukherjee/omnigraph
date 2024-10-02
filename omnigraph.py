@@ -69,37 +69,10 @@ def setscale(ax,style):
     ax.set_xscale('linear')
     ax.set_yscale('linear')
 
-def makeplot(ax,indata,name,annotate,plotstyle):
-  """Create a single graph on a page."""
-  for dataline in indata:
-    mydata   = indata[dataline]['XYdata']
-    mylegend = indata[dataline]['Legend']
-    mymarker = indata[dataline]['Marker']
-    mycolor  = indata[dataline]['Color']
-    mystyle  = indata[dataline]['Style']
-    # plot data
-    ax.plot(*zip(*mydata), marker=mymarker, color=mycolor, linestyle=mystyle, label=mylegend)
-    setscale(ax,plotstyle)
-
-  if annotate is not None:
-    for i in indata[annotate]['XYdata']:
-      ax.annotate(int(i[0]), (i[0]*1.1, i[1]*1.1))
-  ax.set(xlabel='Number of threads')
-  if name is not None:
-    ax.set(ylabel=name)
-  ax.legend(loc='best', fontsize='xx-small')
-
-def makegraph(data,config,page,ha,i,j):
-  """Wrapper function for makeplot."""
-  plot       = page+'.'+str(i)+'.'+str(j)
+def getaxes(config,page,ha,i,j):
+  """Figure out axes based on config; this is a workaround for matplotlib."""
   numv       = config.getint(page,'Numvertical',fallback=1)
   numh       = config.getint(page,'Numhorizontal',fallback=1)
-  graphname  = config.get(plot,'Graphname',fallback=None)
-  label      = config.get(plot,'Ylabel',fallback=None)
-  annotation = config.get(plot,'Annotation',fallback=None)
-  graphstyle = config.get(plot,'Style',fallback='linear')
-
-  # Determine axes
   if numv==1 and numh==1:
     ax=ha
   elif numv>1 and numh>1:
@@ -108,32 +81,71 @@ def makegraph(data,config,page,ha,i,j):
     ax=ha[j]
   else:
     ax=ha[i]
+  return ax
+
+def makeplot(ax,graphdata,config,plot):
+  """Create a single graph on a page."""
+  mylabel      = config.get(plot,'Ylabel',fallback=None)
+  annotation = config.get(plot,'Annotation',fallback=None)
+  graphstyle = config.get(plot,'Style',fallback='linear')
+
+  # Plot the data, one line per Dataset
+  for dataset, elements in graphdata.items():
+    mydata   = elements['XYdata']
+    mylegend = elements['Legend']
+    mymarker = elements['Marker']
+    mycolor  = elements['Color']
+    mystyle  = elements['Style']
+    # plot data
+    ax.plot(*zip(*mydata), marker=mymarker, color=mycolor, linestyle=mystyle, label=mylegend)
+
+  setscale(ax,graphstyle)
+
+  # Decorate the plotted data
+  ax.set(xlabel='Number of threads')
+  if mylabel is not None:
+    ax.set(ylabel=mylabel)
+  ax.legend(loc='best', fontsize='xx-small')
+
+  if annotation is not None:
+    for i in graphdata[annotation]['XYdata']:
+      ax.annotate(int(i[0]), (i[0]*1.1, i[1]*1.1))
+
+def makegraph(data,config,page,ha,i,j):
+  """Wrapper for makeplot."""
+  plot       = page+'.'+str(i)+'.'+str(j)
+  graphname  = config.get(plot,'Graphname',fallback=None)
+
+  ax = getaxes(config,page,ha,i,j)
 
   # Plot data
   if graphname is not None:
-    makeplot(ax,data[graphname],label,annotation,graphstyle)
-  elif numv==1:
-    ha[j].axis('off')
-  elif numh==1:
-    ha[i].axis('off')
+    makeplot(ax,data[graphname],config,plot)
   else:
-    ha[i,j].axis('off')
+    ax.axis('off')
 
-def makegraphs(data,config):
-  """Create all graphs, page by page."""
+def makegraphs(data,config,ha,page):
+  """Create all graphs on one page."""
+  numvertical   = config.getint(page,'Numvertical',fallback=1)
+  numhorizontal = config.getint(page,'Numhorizontal',fallback=1)
+  for i in range(numvertical):
+    for j in range(numhorizontal):
+      makegraph(data,config,page,ha,i,j)
+
+def makepages(data,config):
+  """Create pages."""
   pagenames = config['BASE']['Pagenames'].split()
   for page in pagenames:
     title         = config.get(page,'Title',fallback=None)
     numvertical   = config.getint(page,'Numvertical',fallback=1)
     numhorizontal = config.getint(page,'Numhorizontal',fallback=1)
-    directory  = config.get('BASE','Outputdir',fallback='./')
-    filename   = config.get(page,'Filename',fallback=None)
+    directory     = config.get('BASE','Outputdir',fallback='./')
+    filename      = config.get(page,'Filename',fallback=None)
+
     hf,ha = plt.subplots(numvertical,numhorizontal)
     if title is not None:
       hf.suptitle(title)
-    for i in range(numvertical):
-      for j in range(numhorizontal):
-        makegraph(data,config,page,ha,i,j)
+      makegraphs(data,config,ha,page)
     if filename is not None:
       location = directory+'/'+filename
       plt.savefig(location)
@@ -177,6 +189,6 @@ def main():
       datatruncate(data,graphname,graphline)
       datasort(data,graphname,graphline)
 
-  makegraphs(data,config)
+  makepages(data,config)
 
 main()
