@@ -1,38 +1,19 @@
 ### Purpose
 
-This set of tools (RanRead, RanWrite, and the combined RanIO) is used to generate random read and write events within a database (or pair of databases) to test the IO speed of IRIS running on a specified hardware setup. While Read operations can be measured in the usual Input/Output operations per second (IOPS) since they're direct disk reads, write events are sent to the database and thus their physical writes are managed by IRIS's write daemon.  
+This code is meant to make multi-page graphs of x/y data with subplots easier to use to plot the results of multi-factor experiments. It's based entirely on matplotlib. It uses a configuration file to detail how many pages of graphs to make, how many graphs per page and their layout, which data sets to plot and how, and more. It also allows for modifying data elements prior to graphing, such as rounding, multiplying or adding constants, and so on.
 
-Results gathered from the IO tests will vary from configuration to configuration based on the IO sub-system. Before running these tests, ensure corresponding operating system and storage level monitoring are configured to capture IO performance metrics for later analysis. The suggested method is by running the System Performance tool that comes bundled within IRIS. Please note that this is an update to a previous release, which can be found [here](https://community.intersystems.com/post/random-read-io-storage-performance-tool).
+### Config
 
-<!--break-->
+The default config file is called graphsetup.cfg, but using -c or --conf on the command line an alternative file can be used instead. The configuration sections are BASE, where the list of pages, graphs, and datasets are detailed as well as the location to save files; Graph layouts, where each graph and page mentioned in BASE are fully detailed; and the Dataset section where the input filename convention for each dataset is laid out as well as the line format for each dataset on the graphs.
 
-### Setup
+### Input files
 
-Create an empty (pre-expanded) database called RAN at least twice the size of the memory of the physical host to be tested. Ensure empty database is at least four times the storage controller cache size. The database needs to be larger than memory to ensure reads are not cached in file system cache. You can create manually or use the following methods to automatically create a namespace and database.
+Other than the config file, there are a number of xy-data files. Each of these files corresponds to a single line on a single graph, meaning that at most there will be a number of files equal to the number of graphs times the number of data sets. These files contain the locations of data points, but they do not need to be in order since that is managed internally. Each data set can have a different filename convention, which is detailed in the config file. Each line is one data point, with the x and y values separated by a space or a comma.
 
-<pre style="border: 1px solid rgb(204, 204, 204); padding: 5px 10px; background: rgb(238, 238, 238);">USER> do ##class(PerfTools.RanRead).Setup("/ISC/tests/TMP","RAN",200,1)</pre>
+### Data processing
 
-OR
+The main() function is fairly short, and does the following: read and parse the configuration file while creating an internal data structure to match; read each of the input data files; prepare and massage the data as needed; graph the data as detailed in the config file; and output an optional collated data file of processed, sorted CSV data.
 
-<pre style="border: 1px solid rgb(204, 204, 204); padding: 5px 10px; background: rgb(238, 238, 238);">USER> do ##class(PerfTools.RanIO).Setup("/ISC/tests/TMP","RAN",200,1)</pre>
+### Outputs
 
-### Methodology
-
-Start with a small number of RanRead processes and 30-60 second run times. Then increase the number of processes, e.g. start at 10 jobs and increase by 10, 20, 40 etc. Continue running the individual tests until response time is consistently over 10ms or calculated IOPS is no longer increasing in a linear way. 
-
-As a guide, the following response times for 8KB and 64KB Database Random Reads (non-cached) are usually acceptable for all-flash arrays:
-
-  * Average &lt;= 2ms
-  * Not to exceed &lt;= 5ms
-
-### Run
-
-
-### Results
-
-
-### Analysis
-
-
-### Clean Up
-
+The output files can be in any format that matplotlib can create, and are determined by the filenames in the config file. If the filename is out.pdf, a PDF file is saved, but if it shows out.jpg a JPG file will be saved. The output CSV file is primarily for external analysis via Excel or similar tools. Each line of data is output sequentially, first with a line indicating the data set (i.e. experiment) and graph name (i.e. experiment output value) and followed by the processed x/y data.
