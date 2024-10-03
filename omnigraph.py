@@ -3,9 +3,9 @@
 import argparse
 import configparser
 import csv
+from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
-from pathlib import Path
 
 def graphconfig(filename,data):
   """Load and parse the config file."""
@@ -207,7 +207,7 @@ def main():
         datasort(data,graphname,dataset)
 
   path = Path(config.get('BASE','Outputdir'))
-  path.mkdir(parents=True)
+  path.mkdir(parents=True, exist_ok=True)
 
   makepages(data,config)
   filename='output/collated.csv'
