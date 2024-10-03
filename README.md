@@ -17,3 +17,44 @@ The main() function is fairly short, and does the following: read and parse the 
 ### Outputs
 
 The output files can be in any format that matplotlib can create, and are determined by the filenames in the config file. If the filename is out.pdf, a PDF file is saved, but if it shows out.jpg a JPG file will be saved. The output CSV file is primarily for external analysis via Excel or similar tools. Each line of data is output sequentially, first with a line indicating the data set (i.e. experiment) and graph name (i.e. experiment output value) and followed by the processed x/y data.
+
+### Example
+
+After cloning the repo, run 
+```
+python3 ./omnigraph.py -c demo.cfg
+```
+
+There should now be an output directory containing rundata.png, latency.png, and collated.csv. The images should look like this:
+
+![Run data results](./images/rundata.png)
+
+![Latency data results](./images/latency.png)
+
+And the CSV file should look like this:
+
+```
+pgresdata10,runtime
+4.0,57.431
+8.0,29.882
+16.0,15.692
+32.0,8.515
+64.0,5.114
+128.0,5.069
+256.0,10.536
+512.0,19.934
+pgresgp3data10,runtime
+4.0,65.558
+8.0,34.759
+16.0,18.711
+32.0,10.29
+64.0,7.255
+128.0,7.382
+256.0,10.126
+512.0,20.684
+...
+```
+
+If you want the latency images in a 2x2 block rather than vertically stacked, in demo.cfg replace [Latency.2.0] with [Latency.0.1], and in the [Latency] block change Numvertical from 3 to 2 and Numhorizontal from 1 to 2. Re-run the script, and the second image should now look like this:
+
+![Modified latency data results](./images/latency2.png)
