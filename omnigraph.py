@@ -5,6 +5,7 @@ import configparser
 import csv
 import matplotlib.pyplot as plt
 import numpy as np
+from pathlib import Path
 
 def graphconfig(filename,data):
   """Load and parse the config file."""
@@ -204,6 +205,9 @@ def main():
       if elements['Legend'] is not None:
         dataround(data,graphname,dataset,3)
         datasort(data,graphname,dataset)
+
+  path = Path(config.get('BASE','Outputdir'))
+  path.mkdir(parents=True)
 
   makepages(data,config)
   filename='output/collated.csv'
