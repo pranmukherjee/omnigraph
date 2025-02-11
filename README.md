@@ -2,6 +2,10 @@
 
 This code is meant to make multi-page graphs of x/y data with subplots easier to use to plot the results of multi-factor experiments. It's based entirely on matplotlib. It uses a configuration file to detail how many pages of graphs to make, how many graphs per page and their layout, which data sets to plot and how, and more. It also allows for modifying data elements prior to graphing, such as rounding, multiplying or adding constants, and so on.
 
+### Requirements
+
+This project requires that Python be installed along with Numpy and Matplotlib.
+
 ### Config
 
 The default config file is called graphsetup.cfg, but using -c or --conf on the command line an alternative file can be used instead. The configuration sections are BASE, where the list of pages, graphs, and datasets are detailed as well as the location to save files; Graph layouts, where each graph and page mentioned in BASE are fully detailed; and the Dataset section where the input filename convention for each dataset is laid out as well as the line format for each dataset on the graphs.
