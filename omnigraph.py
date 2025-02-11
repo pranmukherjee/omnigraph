@@ -1,3 +1,4 @@
+#! python3
 """Module providing flexible plotting options for multi-page, variable-scale subplots."""
 
 import argparse
@@ -16,15 +17,16 @@ def graphconfig(filename,data):
   for graphname in config['BASE']['Graphnames'].split():
     data[graphname]={}
     for dataset in config['BASE']['Datasets'].split():
-      data[graphname][dataset]           = {}
-      data[graphname][dataset]['XYdata'] = []
-      data[graphname][dataset]['Legend'] = config.get(dataset,'Legend',fallback=None)
-      data[graphname][dataset]['Marker'] = config[dataset]['Marker'].strip()
-      data[graphname][dataset]['Color']  = config[dataset]['Color'].strip()
-      data[graphname][dataset]['Style']  = config[dataset]['Linestyle'].strip()
-      prefix=config[dataset]['Prefix'].strip()
-      suffix=config[dataset]['Suffix'].strip()
-      data[graphname][dataset]['Filename']=f"{prefix}{graphname}{suffix}"
+      if config.get(dataset,'Legend',fallback=None) is not None:
+        data[graphname][dataset]           = {}
+        data[graphname][dataset]['XYdata'] = []
+        data[graphname][dataset]['Legend'] = config.get(dataset,'Legend')
+        data[graphname][dataset]['Marker'] = config[dataset]['Marker'].strip()
+        data[graphname][dataset]['Color']  = config[dataset]['Color'].strip()
+        data[graphname][dataset]['Style']  = config[dataset]['Linestyle'].strip()
+        prefix=config[dataset]['Prefix'].strip()
+        suffix=config[dataset]['Suffix'].strip()
+        data[graphname][dataset]['Filename']=f"{prefix}{graphname}{suffix}"
   return config
 
 def dataload(data,graphname,dataset):
@@ -116,7 +118,7 @@ def makeplot(ax,graphdata,config,plot):
   # TODO: Make this cleaner and more applicable to other data sets
   if annotation is not None and annotation in graphdata:
     for i in graphdata[annotation]['XYdata']:
-      ax.annotate(int(i[0]), (i[0]*1.1, i[1]*1.1))
+      ax.annotate(int(i[0]), (i[0]*1.05, i[1]*1.05))
 
 def makegraph(data,config,plot,ax):
   """Wrapper for makeplot."""
@@ -157,8 +159,11 @@ def makepages(data,config):
       plt.savefig(location)
       plt.clf()
 
-def writecsv(data,filename):
+def writecsv(data,config):
   """Write out XY data to CSV format for each graph and dataset"""
+  directory     = config.get('BASE','Outputdir',fallback='./')
+  filename      = directory+'/collated.csv'
+
   with open(filename, 'w', encoding='utf-8') as file:
     writer = csv.writer(file, delimiter=',', dialect='excel', quoting=csv.QUOTE_MINIMAL)
     for graphname, datasets in data.items():
@@ -200,6 +205,9 @@ def main():
   if 'runtime' in data:
     for dataset in data['runtime']:
       datamultiply(data,'runtime',dataset,1/60000)
+      datamultiply(data,'read',dataset,1/1000)
+      datamultiply(data,'insert',dataset,1/1000)
+      datamultiply(data,'update',dataset,1/1000)
   for graphname, datasets in data.items():
     for dataset, elements in datasets.items():
       if elements['Legend'] is not None:
@@ -210,7 +218,6 @@ def main():
   path.mkdir(parents=True, exist_ok=True)
 
   makepages(data,config)
-  filename='output/collated.csv'
-  writecsv(data,filename)
+  writecsv(data,config)
 
 main()

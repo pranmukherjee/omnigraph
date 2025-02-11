@@ -22,3 +22,9 @@ proc/pgres_update.txt
 iris.cfg
 pgres.cfg
 ubuntu.code-workspace
+proc/pgres_insert_10M_gp3_1az.txt
+proc/pgres_read_10M_gp3_1az.txt
+proc/pgres_runtime_10M_gp3_1az.txt
+proc/pgres_throughput_10M_gp3_1az.txt
+proc/pgres_update_10M_gp3_1az.txt
+graphsetupiris.cfg
