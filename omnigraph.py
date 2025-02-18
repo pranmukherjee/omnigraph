@@ -31,12 +31,14 @@ def graphconfig(filename,data):
 
 def dataload(data,graphname,dataset):
   """Load one line of xy data from a file."""
-  with open(data[graphname][dataset]['Filename'], 'r', encoding='utf-8') as file:
-    for line in file:
-      clean = line.strip().split()
-      (x,y) = (float(clean[0].strip(',')), float(clean[1].strip(',')))
-      data[graphname][dataset]['XYdata'].append((x,y))
-    file.close()
+  my_file = Path(data[graphname][dataset]['Filename'])
+  if my_file.is_file():
+    with open(data[graphname][dataset]['Filename'], 'r', encoding='utf-8') as file:
+      for line in file:
+        clean = line.strip().split()
+        (x,y) = (float(clean[0].strip(',')), float(clean[1].strip(',')))
+        data[graphname][dataset]['XYdata'].append((x,y))
+      file.close()
 
 def dataround(data,graphname,dataset,numplaces):
   """Truncate float data for easier y-axis readability."""
